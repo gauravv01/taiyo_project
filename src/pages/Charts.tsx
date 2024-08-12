@@ -1,55 +1,79 @@
-import React from 'react';
-import { useQuery } from 'react-query';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import React from "react";
+import { useQuery } from "react-query";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-interface WorldHistoricalData {
-  cases: { [date: string]: number };
-  deaths: { [date: string]: number };
-  recovered: { [date: string]: number };
-}
-
-const fetchWorldHistoricalData = async (): Promise<WorldHistoricalData> => {
-  const response = await fetch('https://disease.sh/v3/covid-19/historical/all?lastdays=all');
+const fetchWorldHistoricalData = async (): Promise<any> => {
+  const response = await fetch("https://disease.sh/v3/covid-19/countries");
   return response.json();
 };
 
 const Charts: React.FC = () => {
-  const { data: worldHistoricalData, isLoading } = useQuery<WorldHistoricalData>('worldHistoricalData', fetchWorldHistoricalData);
+  const { data: worldHistoricalData, isLoading } = useQuery<any>(
+    "worldHistoricalData",
+    fetchWorldHistoricalData
+  );
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-full">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-full">Loading...</div>
+    );
   }
 
-  const dates = worldHistoricalData ? Object.keys(worldHistoricalData.cases) : [];
-  const casesData = worldHistoricalData ? Object.values(worldHistoricalData.cases) : [];
+  const obj = worldHistoricalData.reduce(
+    (acc: any, curr: any) => {
+      const country = curr.country;
+      const cases = curr.cases;
+      acc.countries = [...acc.countries, country];
+      acc.cases = [...acc.cases, cases];
+      return acc;
+    },
+    { countries: [], cases: [] }
+  );
 
   const lineChartData = {
-    labels: dates,
+    labels: obj.countries,
     datasets: [
       {
-        label: 'COVID-19 Cases',
-        data: casesData,
+        label: "COVID-19 Cases",
+        data: obj.cases,
         fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-      }
-    ]
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0.1,
+      },
+    ],
   };
 
   const lineChartOptions = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: "top" as const,
       },
       title: {
         display: true,
-        text: 'COVID-19 Cases Fluctuations'
-      }
-    }
+        text: "COVID-19 Cases Fluctuations",
+      },
+    },
   };
 
   return (

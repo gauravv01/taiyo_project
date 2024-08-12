@@ -2,23 +2,34 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Contact } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-const initialState: Contact[] = [];
+const initialState: {contacts:Contact[],loading:boolean,selectedContact:Contact | {}} = {
+  contacts:[],
+  loading:false,
+  selectedContact:{}
+}
+
 
 const contactsSlice = createSlice({
   name: 'contacts',
   initialState,
   reducers: {
-    addContact: (state, action: PayloadAction<Omit<Contact, 'id'>>) => {
-      state.push({ ...action.payload, id: uuidv4() });
+    addContact: (state, action: PayloadAction<Contact>) => {
+     state.contacts.push(action.payload);
+     if(state.selectedContact){
+      state.selectedContact={}
+     }
     },
     updateContact: (state, action: PayloadAction<Contact>) => {
-      const index = state.findIndex(contact => contact.id === action.payload.id);
+      const index = state.contacts.findIndex(contact => contact.id === action.payload.id);
       if (index !== -1) {
-        state[index] = action.payload;
+      state.selectedContact = action.payload;
+      const updatedContacts= state.contacts.filter(contact => contact.id !== action.payload.id);
+      state.contacts=updatedContacts
       }
     },
-    deleteContact: (state, action: PayloadAction<string>) => {
-      return state.filter(contact => contact.id !== action.payload);
+    deleteContact: (state, action: PayloadAction<Contact>) => {
+     const updatedContacts= state.contacts.filter(contact => contact.id !== action.payload.id);
+     state.contacts=updatedContacts
     },
   },
 });

@@ -1,17 +1,26 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store/store';
-import { addContact, updateContact, deleteContact } from '../store/contactsSlice';
-import { Contact } from '../types';
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../store/store";
+import {
+  addContact,
+  updateContact,
+  deleteContact,
+} from "../store/contactsSlice";
+import { Contact } from "../types";
 
 const Contacts: React.FC = () => {
-  const contacts = useSelector((state: RootState) => state.contacts);
+  const contacts = useSelector((state: RootState) => state.contacts.contacts);
+  const selectedContact = useSelector(
+    (state: RootState) => state.contacts.selectedContact
+  );
   const dispatch = useDispatch();
 
-  const [selectedContact, setSelectedContact] = React.useState<string | null>(null);
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('');
+  const [selectedContactz, setselectedContactz] = React.useState<string | null>(
+    null
+  );
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [phone, setPhone] = React.useState("");
 
   const handleAddContact = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,25 +31,39 @@ const Contacts: React.FC = () => {
       phone,
     };
     dispatch(addContact(newContact));
-    setName('');
-    setEmail('');
-    setPhone('');
+    setName("");
+    setEmail("");
+    setPhone("");
   };
 
   const handleUpdateContact = (contact: Contact) => {
     dispatch(updateContact(contact));
-    setSelectedContact(null);
+    setselectedContactz(null);
   };
 
-  const handleDeleteContact = (id: string) => {
-    dispatch(deleteContact(id));
-    if (selectedContact === id) {
-      setSelectedContact(null);
+  const handleDeleteContact = (contact: Contact) => {
+    dispatch(deleteContact(contact));
+    if (selectedContactz === contact.id) {
+      setselectedContactz(null);
     }
   };
 
+  useEffect(() => {
+    if (selectedContact && Object.keys(selectedContact).length > 0) {
+      if ("name" in selectedContact) {
+        setName(selectedContact.name);
+      }
+      if ("email" in selectedContact) {
+        setEmail(selectedContact.email);
+      }
+      if ("phone" in selectedContact) {
+        setPhone(selectedContact.phone);
+      }
+    }
+  }, [selectedContact]);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="flex flex-row items-start gap-14 p-6">
       <div>
         <h2 className="text-2xl font-bold mb-4">Add Contact</h2>
         <form onSubmit={handleAddContact} className="space-y-4">
@@ -68,7 +91,9 @@ const Contacts: React.FC = () => {
             className="w-full p-2 border rounded"
             required
           />
-          <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
             Add Contact
           </button>
         </form>
@@ -76,19 +101,19 @@ const Contacts: React.FC = () => {
         <h2 className="text-2xl font-bold mt-8 mb-4">Contact List</h2>
         <ul className="space-y-2">
           {contacts.map((contact) => (
-            <li key={contact.id} className="flex justify-between items-center bg-white p-2 rounded shadow">
+            <li
+              key={contact.id}
+              className="flex justify-between items-center bg-white p-2 rounded shadow">
               <span>{contact.name}</span>
               <div>
                 <button
-                  onClick={() => setSelectedContact(contact.id)}
-                  className="text-blue-500 mr-2"
-                >
+                  onClick={() => setselectedContactz(contact.id)}
+                  className="text-blue-500 mr-2">
                   View
                 </button>
                 <button
-                  onClick={() => handleDeleteContact(contact.id)}
-                  className="text-red-500"
-                >
+                  onClick={() => handleDeleteContact(contact)}
+                  className="text-red-500">
                   Delete
                 </button>
               </div>
@@ -96,28 +121,37 @@ const Contacts: React.FC = () => {
           ))}
         </ul>
       </div>
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Contact Details</h2>
-        {selectedContact ? (
-          <div className="bg-white p-4 rounded shadow">
-            {contacts.find(c => c.id === selectedContact) && (
+      {selectedContactz && Object.keys(selectedContactz).length > 0 && (
+        <div className="w-[40%] px-4 py-2 relative bg-white p-4 rounded shadow">
+          <h2 className="text-2xl font-bold mb-4">Contact Details</h2>
+          <div className="">
+            {contacts.find((c) => c.id === selectedContactz) && (
               <>
-                <h3 className="text-xl font-semibold mb-2">{contacts.find(c => c.id === selectedContact)!.name}</h3>
-                <p>Email: {contacts.find(c => c.id === selectedContact)!.email}</p>
-                <p>Phone: {contacts.find(c => c.id === selectedContact)!.phone}</p>
+                <h3 className="text-xl font-semibold mb-2">
+                  {contacts.find((c) => c.id === selectedContactz)!.name}
+                </h3>
+                <p>
+                  <strong>Email:</strong>
+                  {contacts.find((c) => c.id === selectedContactz)!.email}
+                </p>
+                <p>
+                  <strong>Phone:</strong>
+                  {contacts.find((c) => c.id === selectedContactz)!.phone}
+                </p>
                 <button
-                  onClick={() => handleUpdateContact(contacts.find(c => c.id === selectedContact)!)}
-                  className="mt-4 bg-green-500 text-white p-2 rounded hover:bg-green-600"
-                >
+                  onClick={() =>
+                    handleUpdateContact(
+                      contacts.find((c) => c.id === selectedContactz)!
+                    )
+                  }
+                  className="absolute top-3 right-3 bg-green-500 text-white p-2 rounded hover:bg-green-600">
                   Update Contact
                 </button>
               </>
             )}
           </div>
-        ) : (
-          <p>Select a contact to view details</p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
